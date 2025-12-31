@@ -75,23 +75,14 @@ export class SplitInBatchesV3 implements INodeType {
 
 		const options = this.getNodeParameter('options', 0, {});
 
-		if (nodeContext.items === undefined || options.reset === true) {
-			// Is the first time the node runs
+		if (nodeContext.items === undefined || options.reset === true || nodeContext.done === true) {
+			// Is the first time the node runs or the node was done and receives new input (nested loop case)
 
 			const sourceData = this.getInputSourceData();
 
 			nodeContext.currentRunIndex = 0;
 			nodeContext.maxRunIndex = Math.ceil(items.length / batchSize);
 			nodeContext.sourceData = deepCopy(sourceData);
-
-			// Get the items which should be returned
-			returnItems.push.apply(returnItems, items.splice(0, batchSize));
-
-			// Save the incoming items to be able to return them for later runs
-			nodeContext.items = [...items];
-
-			// Reset processedItems as they get only added starting from the first iteration
-			nodeContext.processedItems = [];
 		} else {
 			// The node has been called before. So return the next batch of items.
 			nodeContext.currentRunIndex += 1;
